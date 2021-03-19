@@ -45,12 +45,12 @@ class Ssense:
     def get_sku(self):
         product_page = self.session.get(self.url, headers=self.headers)
         self.soup = bs(product_page.content, 'html.parser')
-        shoe_info = self.soup.find('div', attrs={'class': 'pdp__redesign view'}).find('script')
-        info = json.loads(shoe_info.contents[0])
+        # Ex Black NDSTRKT AM 95 Sneakers
+        self.product_name = self.soup.find('h2', attrs={'class':'pdp-product-title__name s-text'}).text.strip()
+        # Ex 211011M237203 sku for product
+        self.product_sku = self.soup.find('div', attrs={'class':'s-column pdp-product-description'}).find_all('p', attrs={'class':'s-text'})[-1].text
 
-        self.product_name = info.get('name')  # Ex Black NDSTRKT AM 95 Sneakers
         print(clock(), ':: Getting product information for {}'.format(self.product_name))
-        self.product_sku = info.get('sku')    # Ex 211011M237203 sku for product
 
     # gets list of all sizes given
     def get_sizes(self):
