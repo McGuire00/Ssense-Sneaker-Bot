@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup as bs
 from datetime import datetime
 import json
 import sys
+import time
+import random
 
 
 # must have Ssense account
@@ -10,9 +12,6 @@ import sys
 # account may get flagged if ran too many times
 # only works with shoes so far
 # memberBlockedContactSsense response on checkout means Ssense blocked your account
-# Hard code shipping info and payment info below
-# Must hard code account details below
-# Make sure you filled out shipping and billing areas below
 
 
 def clock():
@@ -21,10 +20,16 @@ def clock():
     return str(clock_format) + " CST"
 
 
-print(clock(), ':: Welcome')
-product_link = input('Enter link to product...')
-shoe_size = input('Please enter shoe size...')
+sizes = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5]
 
+print(clock(), ':: Welcome')
+product_link = input('Enter link to product... ')
+shoe_size = input('Please enter shoe size. For random size just press enter ')
+
+if shoe_size == '':
+    random_size = random.choice(sizes)
+    shoe_size = random_size
+    print(clock(), ':: Selecting random size {}'.format(random_size))
 
 
 class Ssense:
@@ -43,14 +48,29 @@ class Ssense:
         self.checkout()   # checkout
 
     def get_sku(self):
-        product_page = self.session.get(self.url, headers=self.headers)
+        headers = {
+        'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'accept-encoding':'gzip, deflate, br',
+        'accept-language':'en-US,en;q=0.9',
+        'cache-control':'max-age=0',
+        'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
+        }
+        product_page = self.session.get(self.url, headers=headers)
         self.soup = bs(product_page.content, 'html.parser')
-        # Ex Black NDSTRKT AM 95 Sneakers
-        self.product_name = self.soup.find('h2', attrs={'class':'pdp-product-title__name s-text'}).text.strip()
-        # Ex 211011M237203 sku for product
-        self.product_sku = self.soup.find('div', attrs={'class':'s-column pdp-product-description'}).find_all('p', attrs={'class':'s-text'})[-1].text
 
-        print(clock(), ':: Getting product information for {}'.format(self.product_name))
+        try:
+            # Ex Black NDSTRKT AM 95 Sneakers
+            self.product_name = self.soup.find('h2', attrs={'class':'pdp-product-title__name s-text'}).text.strip()
+            # Ex 211011M237203 sku for product
+            self.product_sku = self.soup.find('div', attrs={'class':'s-column pdp-product-description'}).find_all('p', attrs={'class':'s-text'})[-1].text
+
+        except AttributeError:
+            # If you get this error Ssense has detected you are using a script adjust headers
+            print(clock(), '::' ,self.soup.find('div', attrs={'class':'content'}).find('p').text.strip())
+            sys.exit()
+
+        else:
+            print(clock(), ':: Getting product information for {}'.format(self.product_name))
 
     # gets list of all sizes given
     def get_sizes(self):
@@ -94,12 +114,23 @@ class Ssense:
         'userId':'null',
         }
         try:
-            atc_request = self.session.post('https://www.ssense.com/en-us/api/shopping-bag/{}'.format(self.size_sku), data=json.dumps(data), headers=headers)
+            carted = 0
+            while not carted:
+                atc_request = self.session.post('https://www.ssense.com/en-us/api/shopping-bag/{}'.format(self.size_sku), data=json.dumps(data), headers=headers)
+                response = atc_request.json()
+                if 'ProductOutOfStock' in response.values():
+                    print(clock(), '::', response['code'])
+                    # ROLLING PRINT FOR ATC RETRY
+                    # CURRENTLY SET TO RETRY EVERY 5 SECONDS LOWER AT YOUR OWN RISK
+                    for i in range(5):
+                        sys.stdout.write("\r" + clock() + ' :: Retrying ATC in {} seconds...'.format(str(5 - i)))
+                        time.sleep(1)
+                else:
+                    carted += 1
         except:
-            print(clock(), ':: error adding to cart. EXITING')
+            print(clock(), ':: error adding to cart')
             sys.exit()
         else:
-            response = atc_request.json()
             self.total = response['cart'].get('total')
             self.token = response['cart'].get('token')
             print(clock(), ':: cart quanitity = {}'.format(response['cart'].get('quantity')))
