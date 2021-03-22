@@ -23,6 +23,8 @@ def clock():
 sizes = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5]
 
 print(clock(), ':: Welcome')
+email = input('Enter email associated with Ssense account... ')
+password = input('Enter password... ')
 product_link = input('Enter link to product... ')
 shoe_size = input('Please enter shoe size. For random size just press enter ')
 
@@ -148,10 +150,10 @@ class Ssense:
         }
         
         # Be careful, account can get banned if ran too many times
-        # Insert account info here
+        # Login parameters
         info = {
-        'email':'',                             # Ssense account email
-        'password':''                           # SSense account password
+        'email': email,                                # Ssense account email
+        'password': password                           # Ssense account password
         }
         
         try:
