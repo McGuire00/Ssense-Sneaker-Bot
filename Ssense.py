@@ -76,6 +76,7 @@ class Ssense:
 
     # gets list of all sizes given
     def get_sizes(self):
+        found = 0
         size_list = self.soup.find_all('option')
         sz = []
         sz_sku = []
@@ -93,7 +94,23 @@ class Ssense:
                 if str(self.shoe_size) == i.split(' ')[1]:
                     self.size_sku = i.split(' ')[-1][-15:]  # sku for chosen size ie: 211011M23720301
                     self.shoe_info = i                      # US 8 = IT 41 - Only 1 remaining 8_211011M23720301
+                    found += 1
                     print(clock(), ':: {}'.format(self.shoe_info))
+                    
+        # executes if user selected size was not in size run
+        # picks a random size
+        if found == 0:
+            random_size = random.choice([x for x in sizes if x != shoe_size])
+            self.shoe_size = random_size
+            print(clock(), ':: The size you selected is not in the size run. Choosing random size {}'.format(self.shoe_size))
+            for x in size_run:
+                for i in x.split('\n'):
+                    # prints out list of sizes with sku numbers
+                    if str(self.shoe_size) == i.split(' ')[1]:  # list of size run
+                        self.size_sku = i.split(' ')[-1][-15:]  # sku for chosen size ie: 211011M23720301
+                        self.shoe_info = i                      # US 8 = IT 41 - Only 1 remaining 8_211011M23720301
+                        found += 1
+                        print(clock(), ':: {}'.format(self.shoe_info))
 
     # checks inventory of all sizes
     def inventory(self):
