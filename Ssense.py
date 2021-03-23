@@ -42,10 +42,10 @@ class Ssense:
         self.url = product_link
         self.shoe_size = shoe_size
         self.session = requests.session()
+        self.login()      # Must have Ssense account
         self.get_sku()    # gets product sku needed to check inventory and atc
         self.get_sizes()  # checks if selected size is in stock
         self.atc()        # atc
-        self.login()      # Must have Ssense account
         self.cart()       # gets cart info
         self.checkout()   # checkout
 
