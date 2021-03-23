@@ -144,6 +144,7 @@ class Ssense:
                     for i in range(5):
                         sys.stdout.write("\r" + clock() + ' :: Retrying ATC in {} seconds...'.format(str(5 - i)))
                         time.sleep(1)
+                    sys.stdout.write('\n')
                 else:
                     carted += 1
         except:
@@ -176,7 +177,7 @@ class Ssense:
         try:
             login_account = self.session.post('https://www.ssense.com/en-us/account/login', data=info, headers=headers)
         except:
-            print(clock(), ':: Error logging into account')
+            print(clock(), ':: Error logging into account. Account details might be wrong')
             sys.exit()
         else:
             self.user_id = login_account.json().get('id')  # might need this
