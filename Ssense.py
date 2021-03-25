@@ -27,6 +27,7 @@ email = input('Enter email associated with Ssense account... ')
 password = input('Enter password... ')
 product_link = input('Enter link to product... ')
 shoe_size = input('Please enter shoe size. For random size just press enter ')
+print()
 
 if shoe_size == '':
     random_size = random.choice(sizes)
@@ -37,12 +38,13 @@ if shoe_size == '':
 class Ssense:
     def __init__(self):
         self.headers = {
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36'
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36'
         }
         self.url = product_link
         self.shoe_size = shoe_size
         self.session = requests.session()
         self.login()      # Must have Ssense account
+        self.clear_cart() # Makes sure cart is empty and if not clears it
         self.get_sku()    # gets product sku needed to check inventory and atc
         self.get_sizes()  # checks if selected size is in stock
         self.atc()        # atc
@@ -51,11 +53,11 @@ class Ssense:
 
     def get_sku(self):
         headers = {
-        'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'accept-encoding':'gzip, deflate, br',
-        'accept-language':'en-US,en;q=0.9',
-        'cache-control':'max-age=0',
-        'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
+            'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'accept-encoding':'gzip, deflate, br',
+            'accept-language':'en-US,en;q=0.9',
+            'cache-control':'max-age=0',
+            'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
         }
         product_page = self.session.get(self.url, headers=headers)
         self.soup = bs(product_page.content, 'html.parser')
@@ -96,7 +98,7 @@ class Ssense:
                     self.shoe_info = i                      # US 8 = IT 41 - Only 1 remaining 8_211011M23720301
                     found += 1
                     print(clock(), ':: {}'.format(self.shoe_info))
-                    
+
         # executes if user selected size was not in size run
         # picks a random size
         if found == 0:
@@ -120,17 +122,17 @@ class Ssense:
 
     def atc(self):
         headers = {
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36',
-        'referer':self.url,
-        'accept':'application/json',
-        'accept-encoding':'gzip, deflate, br',
-        'content-type':'application/json'
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36',
+            'referer':self.url,
+            'accept':'application/json',
+            'accept-encoding':'gzip, deflate, br',
+            'content-type':'application/json'
         }
 
         data = {
-        'serviceType':'product-details',
-        'sku':self.product_sku,
-        'userId':'null',
+            'serviceType':'product-details',
+            'sku':self.product_sku,
+            'userId':'null',
         }
         try:
             carted = 0
@@ -159,21 +161,21 @@ class Ssense:
     # Ssense first step of checkout is to login
     def login(self):
         headers = {
-        'referer':'https://www.ssense.com/en-us/shopping-bag',
-        'accept-encoding':'gzip, deflate, br',
-        'content-type':'application/x-www-form-urlencoded; charset=utf-8',
-        'accept':'application/json',
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36',
-        'origin':'https://www.ssense.com'
+            'referer':'https://www.ssense.com/en-us/shopping-bag',
+            'accept-encoding':'gzip, deflate, br',
+            'content-type':'application/x-www-form-urlencoded; charset=utf-8',
+            'accept':'application/json',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36',
+            'origin':'https://www.ssense.com'
         }
-        
+
         # Be careful, account can get banned if ran too many times
         # Login parameters
         info = {
-        'email': email,                                # Ssense account email
-        'password': password                           # Ssense account password
+            'email': email,                                # Ssense account email
+            'password': password                           # Ssense account password
         }
-        
+
         try:
             login_account = self.session.post('https://www.ssense.com/en-us/account/login', data=info, headers=headers)
         except:
@@ -199,14 +201,45 @@ class Ssense:
         # .find('span', attrs={'class':'s-text'}).text.strip()
         self.cart_price = cart_total[1:-7]
 
+    # clears cart before running bot
+    def clear_cart(self):
+        head = {
+            'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36',
+            'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'accept-encoding':'gzip, deflate, br',
+            'upgrade-insecure-requests': '1'
+        }
+        cart = self.session.get('https://www.ssense.com/en-us/shopping-bag', headers=head)
+        soup = bs(cart.content, 'html.parser')
+        try:
+            table = soup.find('div', attrs={'class': 'table'})
+            body = table.find('ul')
+        # if nothing is in cart an Attribute 'nonetype' error is raised
+        except AttributeError:
+            print(clock(), ':: Cart already clear')
+            print()
+        else:
+            cart_items = []
+            for x in body.find_all('div', attrs={'class':'span7 shopping-item-description'}):
+                # sku for every item in cart
+                cart = x.find_all('a')[3].text
+                cart_items.append(cart)
+            print(clock(), ':: Clearing {} item(s) in your cart'.format(len(cart_items)))
+            # loops through items in cart and deletes each item
+            for product in cart_items:
+                delete = self.session.delete('https://www.ssense.com/en-us/api/shopping-bag/{}'.format(product), headers=head)
+            if delete.status_code == 200:
+                print(clock(), ':: COMPLETE')
+                print()
+
     def checkout(self):
         print(clock(), ':: Checking out')
         headers = {
-        'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36',
-        'referer':'https://www.ssense.com/en-us/checkout',
-        'origin':'https://www.ssense.com',
-        'accept':'application/json',
-        'content-type':'application/json'
+            'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36',
+            'referer':'https://www.ssense.com/en-us/checkout',
+            'origin':'https://www.ssense.com',
+            'accept':'application/json',
+            'content-type':'application/json'
 
         }
         # Thought this was needed
@@ -218,45 +251,45 @@ class Ssense:
 
         # checkout payload adjust here accordingly
         checkout_payload = {
-        '_csrf':csrf_token,
-        'shippingAddress':{
-            "id": self.user_id,
-            "firstName": "",                                    # First Name
-            "lastName": "",                                     # Last Name
-            "company": "",                                      # Leave empty
-            "address1": "",                                     # Shipping address
-            "countryCode": "US",
-            "stateCode": "",                                    # State
-            "postCode": "",                                     # Zip Code
-            "city": "",                                         # City
-            "phone": ""                                         # Phone number
-        },
-        "shippingMethodId": 7,
-        "shippingMethodKeyName": "express",
-        "paymentMethod": "credit",
-        "skus":[self.size_sku],
-        "orderTotal": self.cart_price,
-        "creditCardDetails":{
-            "tokenizedCardNumber":"",                           # Credit card number
-            "tokenizedSecurityCode":"",                         # CVV
-            "expiryMonth":"",                                   # EXP month
-            "expiryYear":"",                                    # EXP year
-            "cardholderName":""
-        },
-        "billingAddress": {
-            "id": self.user_id,
-            "firstName": "",                                    # Enter exact same shipping detail from above
-            "lastName": "",
-            "company": "",
-            "address1": "",                                     
-            "countryCode": "US",
-            "stateCode": "",
-            "postCode": "",
-            "city": "",
-            "phone": "",
-            "isSameAsShipping": "true"
-        },
-        "paymentProcessor": "firstdatapayeezy"
+            '_csrf':csrf_token,
+            'shippingAddress':{
+                "id": self.user_id,
+                "firstName": "",                                    # First Name
+                "lastName": "",                                     # Last Name
+                "company": "",                                      # Leave empty
+                "address1": "",                                     # Shipping address
+                "countryCode": "US",
+                "stateCode": "",                                    # State
+                "postCode": "",                                     # Zip Code
+                "city": "",                                         # City
+                "phone": ""                                         # Phone number
+            },
+            "shippingMethodId": 7,
+            "shippingMethodKeyName": "express",
+            "paymentMethod": "credit",
+            "skus":[self.size_sku],
+            "orderTotal": self.cart_price,
+            "creditCardDetails":{
+                "tokenizedCardNumber":"",                           # Credit card number
+                "tokenizedSecurityCode":"",                         # CVV
+                "expiryMonth":"",                                   # EXP month
+                "expiryYear":"",                                    # EXP year
+                "cardholderName":""
+            },
+            "billingAddress": {
+                "id": self.user_id,
+                "firstName": "",                                    # Enter exact same shipping detail from above
+                "lastName": "",
+                "company": "",
+                "address1": "",
+                "countryCode": "US",
+                "stateCode": "",
+                "postCode": "",
+                "city": "",
+                "phone": "",
+                "isSameAsShipping": "true"
+            },
+            "paymentProcessor": "firstdatapayeezy"
         }
 
         submit_checkout = self.session.post('https://www.ssense.com/en-us/api/checkout/authorize', data=json.dumps(checkout_payload), headers=headers)
@@ -264,10 +297,3 @@ class Ssense:
 
 
 shoe = Ssense()
-
-
-
-
-
-
-
