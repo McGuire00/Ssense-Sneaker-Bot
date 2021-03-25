@@ -7,6 +7,7 @@ import time
 import random
 
 
+# Hard code checkout details at the bottom
 # must have Ssense account
 # clear cart before running bot otherwise you will get an error
 # account may get flagged if ran too many times
